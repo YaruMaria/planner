@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Управление учениками</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background-color: #e8efe2;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            color: #25391a;
+            padding: 20px;
+        }
+        .students-list .list-group-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 class="mb-4">Управление учениками</h1>
+
+    <!-- Форма добавления ученика -->
+    <div class="card mb-4">
+        <div class="card-header">Добавить нового ученика</div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('manage_students') }}">
+                <div class="mb-3">
+                    <label for="nameInput" class="form-label">Имя ученика</label>
+                    <input type="text" class="form-control" id="nameInput" name="name" placeholder="Введите имя" required>
+                </div>
+                <div class="mb-3">
+                    <label for="subjectInput" class="form-label">Предмет</label>
+                    <input type="text" class="form-control" id="subjectInput" name="subject" placeholder="Введите предмет" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Размер событий</label>
+                    <select class="form-select" name="size" required>
+                        <option value="small">Маленький (занимает меньше места)</option>
+                        <option value="medium" selected>Средний (стандартный)</option>
+                        <option value="large">Большой (занимает больше места)</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Выберите цвет (оттенок зелёного)</label>
+                    <div>
+                        {% for name, hex in palette.items() %}
+                        <input type="radio" class="btn-check" name="color" id="color-{{ loop.index }}" value="{{ hex }}" required>
+                        <label class="btn btn-outline-success me-2 mb-2" for="color-{{ loop.index }}" style="background-color: {{ hex }}; color: {% if loop.index > 3 %}white{% else %}black{% endif %};">
+                            {{ name }}
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-success">Добавить ученика</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Список учеников -->
+    <div class="students-list">
+        <h3>Список учеников</h3>
+        <ul class="list-group">
+            {% if students %}
+                {% for s in students %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>
+                        <span class="badge" style="background-color: {{ s.color }}; color: {% if s.color in ['#3d5526', '#25391a'] %}white{% else %}black{% endif %};">{{ s.name }}</span> - {{ s.subject }} ({{ s.size }})
+                    </span>
+                    <form method="POST" action="{{ url_for('remove_student', name=s.name) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                    </form>
+                </li>
+                {% endfor %}
+            {% else %}
+                <li class="list-group-item">Пока нет учеников. Добавьте первого!</li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <br>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary">Вернуться к расписанию</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+

@@ -36,7 +36,12 @@ schedule = {
 
 weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-# Коэффициенты размера для высоты событий (увеличены, как в твоём коде)
+# Временной диапазон (с 7:00 до 23:00)
+START_HOUR = 7
+END_HOUR = 23
+TOTAL_HOURS = END_HOUR - START_HOUR
+
+# Коэффициенты размера для высоты событий
 size_factors = {"small": 1.3, "medium": 1.6, "large": 1.9}
 
 # Функции для сохранения и загрузки
@@ -87,7 +92,15 @@ def load_data():
 
 @app.route("/")
 def index():
-    return render_template("schedule.html", schedule=schedule, weekdays=weekdays, palette=palette, students=students, size_factors=size_factors)
+    return render_template("schedule.html",
+                         schedule=schedule,
+                         weekdays=weekdays,
+                         palette=palette,
+                         students=students,
+                         size_factors=size_factors,
+                         start_hour=START_HOUR,
+                         end_hour=END_HOUR,
+                         total_hours=TOTAL_HOURS)
 
 @app.route("/students", methods=["GET", "POST"])
 def manage_students():
@@ -111,7 +124,7 @@ def manage_students():
 @app.route("/add_event", methods=["POST"])
 def add_event():
     day = request.form.get("day")
-    student_name = request.form.get("student")  # Теперь это имя выбранного ученика
+    student_name = request.form.get("student")
 
     if day not in schedule:
         return "Неверный день", 400
@@ -184,4 +197,3 @@ def remove_student(name):
 
 if __name__ == "__main__":
     app.run(debug=True)
-

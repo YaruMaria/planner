@@ -7,9 +7,13 @@ app = Flask(__name__)
 
 # Палитра оттенков зелёного
 palette = {
-    "Pale Jade": "#e8efe2",
+    "Green Tea Cream": "#e0e8d3",
+    "Pale Celadon": "#d2dec0",
+    "Seafoam Green": "#b8d0a3",
     "Soft Matcha": "#c6d3a0",
-    "Olive Matcha": "#94ad6e",
+    "Wasabi Green": "#9db15f",
+    "Olive Grove": "#7d8c47",
+    "Moss Green": "#769455",
     "Roasted Green": "#5f7f3d",
     "Dark Tea Leaf": "#3d5526",
     "Forest Shadow": "#25391a",

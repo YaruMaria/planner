@@ -39,12 +39,14 @@
             border-radius: 10px;
             overflow: hidden;
             height: 600px;
+            margin-top: 10px; /* Добавь эту строку */
         }
         .times {
             width: 50px;
             background: #e8efe2;
             border-right: 1px solid #c6d3a0;
             position: relative;
+            margin-top: 50px; /* Изменил с 60px на 0px, чтобы левая колонка с временем была выше */
         }
         .time-label {
             height: 40px;
@@ -55,6 +57,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .days {
             display: flex;
             flex: 1;
@@ -74,11 +77,11 @@
             background: #c6d3a0;
             color: #25391a;
             font-weight: 700;
-            padding: 8px 0;
+            padding: 6px 0; /* Уменьши padding */
             border-bottom: 1px solid #94ad6e;
             user-select: none;
-            font-size: 0.9rem;
-            height: 60px;
+            font-size: 0.8rem; /* Уменьши шрифт */
+            height: 50px; /* Уменьши высоту */
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -103,7 +106,7 @@
             opacity: 0.8;
         }
         .event-title {
-            font-weight: 700;
+            font-weight: 1000;
             margin-bottom: 3px;
             line-height: 1.2;
         }
@@ -245,43 +248,49 @@
 
 
         <!-- Календарь -->
-        <div class="schedule-container">
-            <div class="schedule">
-                {% set start_hour = 7 %}
-                {% set end_hour = 23 %}
-                {% set total_hours = end_hour - start_hour + 1 %}
-                {% set container_height = 600 %}
-                {% set pixels_per_minute = container_height / (total_hours * 60) %}
+<div class="schedule-container">
+    <div class="schedule">
+        {% set start_hour = 7 %}
+        {% set end_hour = 23 %}
+        {% set total_hours = end_hour - start_hour  + 3%}
+        {% set container_height = 600 %}
+        {% set hour_height = container_height / total_hours %}
+        {% set pixels_per_minute = hour_height / 60 %}
 
-                <div class="times">
-                    {% for hour in range(start_hour, end_hour + 1) %}
-                    <div class="time-label">{{ hour }}:00</div>
-                    {% endfor %}
-                </div>
+        <div class="times">
+            {% for hour in range(start_hour, end_hour + 1) %}
+            <div class="time-label" style="height: {{ hour_height }}px;">{{ hour }}:00</div>
+            {% endfor %}
+        </div>
 
-                <div class="days">
-                    {% for day in weekdays %}
-                    <div class="day-column" data-day="{{ day }}" onclick="openModal('{{ day }}')">
-                        <div class="day-name">
-                            {{ weekdays_ru[day] }}<br>
-                            <small>{{ week_dates[day].formatted }}</small>
-                        </div>
-                        {% for event in schedule[day] %}
-                        {% set start_h, start_m = event.start.split(':') | map('int') %}
-                        {% set end_h, end_m = event.end.split(':') | map('int') %}
-                        {% set top = ((start_h - start_hour) * 60 + start_m) * pixels_per_minute %}
-                        {% set height = ((end_h - start_h) * 60 + (end_m - start_m)) * pixels_per_minute * size_factors[event.size] %}
-                        <div class="event" style="top: {{ top }}px; height: {{ height }}px; background-color: {{ event.color }};" onclick="event.stopPropagation(); openEditModal('{{ day }}', {{ loop.index - 1 }}, '{{ event.student }}', '{{ event.subject }}', '{{ event.start }}', '{{ event.end }}')">
-                            <div class="event-title">{{ event.student }}</div>
-                            <div class="event-time">{{ event.start }} - {{ event.end }}</div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                    {% endfor %}
+        <div class="days">
+            {% for day in weekdays %}
+            <div class="day-column" data-day="{{ day }}" onclick="openModal('{{ day }}')">
+                <div class="day-name">
+                    {{ weekdays_ru[day] }}<br>
+                    <small>{{ week_dates[day].formatted }}</small>
                 </div>
+                {% for event in schedule[day] %}
+                {% set start_h, start_m = event.start.split(':') | map('int') %}
+                {% set end_h, end_m = event.end.split(':') | map('int') %}
+
+                {% set start_minutes_from_7 = (start_h - start_hour) * 60 + start_m %}
+                {% set end_minutes_from_7 = (end_h - start_hour) * 60 + end_m %}
+                {% set duration_minutes = end_minutes_from_7 - start_minutes_from_7 %}
+
+                {% set top = start_minutes_from_7 * pixels_per_minute + 50 %} <!-- 50px - высота .day-name -->
+                {% set height = duration_minutes * pixels_per_minute %}
+
+                <div class="event" style="top: {{ top }}px; height: {{ height }}px; background-color: {{ event.color }};" onclick="event.stopPropagation(); openEditModal('{{ day }}', {{ loop.index - 1 }}, '{{ event.student }}', '{{ event.subject }}', '{{ event.start }}', '{{ event.end }}')">
+                    <div class="event-title">{{ event.student }}</div>
+                    <div class="event-time">{{ event.start }} - {{ event.end }}</div>
+                </div>
+                {% endfor %}
             </div>
+            {% endfor %}
         </div>
     </div>
+</div>
 
     <!-- Правая панель с задачами -->
     <div class="right-panel">
@@ -446,3 +455,4 @@
 
 </body>
 </html>
+

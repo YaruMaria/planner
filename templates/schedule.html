@@ -132,6 +132,7 @@
             margin-top: 2px;
             line-height: 1.1;
             word-break: break-word;
+            display: none; /* Комментарий скрыт в расписании */
         }
         .btn-save {
             background-color: #5f7f3d;
@@ -428,6 +429,7 @@
       <div class="modal-body">
         <p><strong>Ученик:</strong> <span id="editStudent"></span></p>
         <p><strong>Предмет:</strong> <span id="editSubject"></span></p>
+        <p><strong>Комментарий:</strong> <span id="editCommentDisplay"></span></p>
 
         <form id="updateForm" method="POST" action="{{ url_for('update_event') }}">
             <input type="hidden" name="day" id="editDay" />
@@ -486,6 +488,7 @@
         document.getElementById('editStartTime').value = start;
         document.getElementById('editEndTime').value = end;
         document.getElementById('editComment').value = comment || '';
+        document.getElementById('editCommentDisplay').textContent = comment || 'нет комментария';
         editModal.show();
     }
 
@@ -622,3 +625,4 @@
 
 </body>
 </html>
+

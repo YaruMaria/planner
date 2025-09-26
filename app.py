@@ -158,8 +158,13 @@ def index():
     week_offset = int(request.args.get('week', 0))
     week_dates = get_week_dates(week_offset)
 
-    # Получаем задачи на сегодня (первый день выбранной недели)
-    selected_date = week_dates["Monday"]["iso"]  # Можно изменить на текущий день
+    # Вычисляем текущий день выбранной недели (сегодня + смещение)
+    current_date = datetime.now().date() + timedelta(weeks=week_offset)
+    selected_date = current_date.isoformat()
+    weekday_index = current_date.weekday()
+    current_day_name = weekdays[weekday_index]
+    date_formatted = week_dates[current_day_name]["formatted"]
+
     today_tasks = get_today_tasks(selected_date)
 
     return render_template("schedule.html",
@@ -175,7 +180,9 @@ def index():
                            week_offset=week_offset,
                            week_dates=week_dates,
                            today_tasks=today_tasks,
-                           selected_date=selected_date)
+                           selected_date=selected_date,
+                           current_day_iso=selected_date,
+                           date_formatted=date_formatted)
 
 
 @app.route("/add_task", methods=["POST"])
@@ -327,3 +334,4 @@ def remove_student(name):
 
 if __name__ == "__main__":
     app.run(debug=True)
+

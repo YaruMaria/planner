@@ -12,9 +12,24 @@
             color: #25391a;
             padding: 20px;
         }
-        .schedule-container {
-            max-width: 1400px;
+        .main-container {
+            max-width: 1800px;
             margin: 0 auto;
+            display: flex;
+            gap: 20px;
+        }
+        .left-panel {
+            flex: 3;
+        }
+        .right-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+        .schedule-container {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 0 10px #94ad6e44;
         }
         .schedule {
             display: flex;
@@ -22,8 +37,7 @@
             background: white;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 0 10px #94ad6e44;
-            height: 680px; /* 17 часов * 40px */
+            height: 600px;
         }
         .times {
             width: 50px;
@@ -32,7 +46,7 @@
             position: relative;
         }
         .time-label {
-            height: 40px; /* Высота временной метки */
+            height: 40px;
             border-bottom: 1px solid #c6d3a0;
             font-size: 0.7rem;
             color: #5f7f3d;
@@ -48,7 +62,7 @@
             flex: 1;
             border-right: 1px solid #c6d3a0;
             position: relative;
-            min-height: 680px; /* Соответствует высоте расписания */
+            min-height: 600px;
             cursor: pointer;
         }
         .day-column:last-child {
@@ -63,6 +77,10 @@
             border-bottom: 1px solid #94ad6e;
             user-select: none;
             font-size: 0.9rem;
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
         .event {
             position: absolute;
@@ -93,25 +111,21 @@
             color: white;
             border: none;
         }
-
         .btn-save:hover,
         .btn-save:focus {
             background-color: #4b6a30;
             color: white;
         }
-
         .btn-delete {
             background-color: #94ad6e;
             color: white;
             border: none;
         }
-
         .btn-delete:hover,
         .btn-delete:focus {
             background-color: #7b9457;
             color: white;
         }
-
         .event-time {
             font-size: 0.7rem;
             opacity: 0.9;
@@ -136,218 +150,292 @@
             min-width: 200px;
             text-align: center;
         }
+        .tasks-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px #94ad6e44;
+            height: fit-content;
+        }
+        .tasks-header {
+            background: #5f7f3d;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e8efe2;
+            gap: 10px;
+        }
+        .task-text {
+            flex: 1;
+            margin: 0;
+        }
+        .task-completed {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+        .add-task-form {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #c6d3a0;
+        }
+        @media (max-width: 1400px) {
+            .main-container {
+                flex-direction: column;
+            }
+            .left-panel, .right-panel {
+                width: 100%;
+            }
+        }
         @media (max-width: 1200px) {
             .schedule {
-                height: 595px; /* 17 * 35 */
+                height: 500px;
             }
             .day-column {
-                min-height: 595px;
+                min-height: 500px;
             }
             .time-label {
                 height: 35px;
-                font-size: 0.65rem;
-            }
-            .event {
-                font-size: 0.7rem;
-                padding: 4px;
-            }
-        }
-        @media (max-width: 992px) {
-            .schedule {
-                height: 510px; /* 17 * 30 */
-            }
-            .day-column {
-                min-height: 510px;
-            }
-            .time-label {
-                height: 30px;
-                font-size: 0.6rem;
-            }
-            .event {
-                font-size: 0.65rem;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="schedule-container">
-    <!-- Кнопка "Ученики" в правом верхнем углу -->
-    <a href="{{ url_for('manage_students') }}" class="btn btn-success students-btn">Ученики</a>
+<!-- Кнопка "Ученики" в правом верхнем углу -->
+<a href="{{ url_for('manage_students') }}" class="btn btn-success students-btn">Ученики</a>
 
-    <h1 class="mb-4 text-center">Планнер</h1>
+<div class="main-container">
+    <!-- Левая панель с календарем -->
+    <div class="left-panel">
+        <h1 class="mb-4 text-center">Планнер</h1>
 
-    <!-- Навигация по неделям -->
-    <div class="week-navigation">
-        <a href="{{ url_for('index', week=week_offset-1) }}" class="btn btn-success">← Предыдущая неделя</a>
-        <div class="week-title">
-            {% if week_offset == 0 %}
-                Текущая неделя
-            {% elif week_offset == 1 %}
-                Следующая неделя
-            {% elif week_offset == -1 %}
-                Прошлая неделя
-            {% elif week_offset > 1 %}
-                Через {{ week_offset }} недель
-            {% else %}
-                {{ -week_offset }} недель назад
-            {% endif %}
-        </div>
-        <a href="{{ url_for('index', week=week_offset+1) }}" class="btn btn-success">Следующая неделя →</a>
-    </div>
-
-    <!-- Кнопка возврата к текущей неделе -->
-    <div class="text-center mb-3">
-        <a href="{{ url_for('index', week=0) }}" class="btn btn-outline-success">Сегодня</a>
-    </div>
-
-    <!-- Список учеников -->
-    <div class="students-list mb-4">
-        <h3>Список учеников</h3>
-        <ul class="list-group">
-            {% if students %}
-                {% for s in students %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <span>
-                        <span class="badge" style="background-color: {{ s.color }}; color: {% if s.color in ['#3d5526', '#25391a'] %}white{% else %}black{% endif %};">{{ s.name }}</span> - {{ s.subject }} ({{ s.size }})
-                    </span>
-                    <form method="POST" action="{{ url_for('remove_student', name=s.name) }}" style="display: inline;">
-                        <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
-                    </form>
-                </li>
-                {% endfor %}
-            {% else %}
-                <li class="list-group-item">Пока нет учеников. Добавьте первого на странице "Ученики"!</li>
-            {% endif %}
-        </ul>
-    </div>
-
-    <div class="schedule mb-4">
-        {% set start_hour = 7 %}
-        {% set end_hour = 23 %}
-        {% set total_hours = end_hour - start_hour + 1 %}
-        {% set container_height = 680 %}
-        {% set pixels_per_minute = container_height / (total_hours * 60) %}
-
-        <div class="times">
-            {% for hour in range(start_hour, end_hour + 1) %}
-            <div class="time-label">{{ hour }}:00</div>
-            {% endfor %}
-        </div>
-
-        <div class="days">
-            {% for day in weekdays %}
-            <div class="day-column" data-day="{{ day }}" onclick="openModal('{{ day }}')">
-                <div class="day-name">
-                    {{ day[:3] }}<br>
-                    <small>{{ week_dates[day] }}</small>
-                </div>
-                {% for event in schedule[day] %}
-                {% set start_h, start_m = event.start.split(':') | map('int') %}
-                {% set end_h, end_m = event.end.split(':') | map('int') %}
-                {% set top = ((start_h - start_hour) * 60 + start_m) * pixels_per_minute %}
-                {% set height = ((end_h - start_h) * 60 + (end_m - start_m)) * pixels_per_minute * size_factors[event.size] %}
-                <div class="event" style="top: {{ top }}px; height: {{ height }}px; background-color: {{ event.color }};" onclick="event.stopPropagation(); openEditModal('{{ day }}', {{ loop.index - 1 }}, '{{ event.student }}', '{{ event.subject }}', '{{ event.start }}', '{{ event.end }}')">
-                    <div class="event-title">{{ event.student }}</div>
-                    <div class="event-time">{{ event.start }} - {{ event.end }}</div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Модальное окно добавления события -->
-    <div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <form method="POST" action="{{ url_for('add_event') }}">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title" id="eventModalLabel">Добавить урок</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
-              </div>
-              <div class="modal-body">
-                <input type="hidden" name="day" id="modalDay" />
-                <input type="hidden" name="week_offset" value="{{ week_offset }}" />
-
-                {% if students %}
-                <div class="mb-3">
-                    <label for="studentSelect" class="form-label">Выберите ученика</label>
-                    <select class="form-select" id="studentSelect" name="student" required>
-                        <option value="">-- Выберите ученика --</option>
-                        {% for s in students %}
-                        <option value="{{ s.name }}">{{ s.name }} - {{ s.subject }} ({{ s.size }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
+        <!-- Навигация по неделям -->
+        <div class="week-navigation">
+            <a href="{{ url_for('index', week=week_offset-1) }}" class="btn btn-success">← Предыдущая неделя</a>
+            <div class="week-title">
+                {% if week_offset == 0 %}
+                    Текущая неделя
+                {% elif week_offset == 1 %}
+                    Следующая неделя
+                {% elif week_offset == -1 %}
+                    Прошлая неделя
+                {% elif week_offset > 1 %}
+                    Через {{ week_offset }} недель
                 {% else %}
-                <div class="alert alert-warning">
-                    Нет учеников. Сначала добавьте ученика на странице "Ученики".
-                </div>
+                    {{ -week_offset }} недель назад
                 {% endif %}
-
-                <div class="mb-3">
-                    <label for="startTime" class="form-label">Время начала</label>
-                    <input type="time" class="form-control" id="startTime" name="start" min="07:00" max="22:59" required>
-                </div>
-
-                <div class="mb-3">
-                    <label for="endTime" class="form-label">Время окончания</label>
-                    <input type="time" class="form-control" id="endTime" name="end" min="07:01" max="23:00" required>
-                </div>
-
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                <button type="submit" class="btn btn-success" {% if not students %}disabled{% endif %}>Добавить</button>
-              </div>
             </div>
-        </form>
-      </div>
+            <a href="{{ url_for('index', week=week_offset+1) }}" class="btn btn-success">Следующая неделя →</a>
+        </div>
+
+        <!-- Кнопка возврата к текущей неделе -->
+        <div class="text-center mb-3">
+            <a href="{{ url_for('index', week=0) }}" class="btn btn-outline-success">Сегодня</a>
+        </div>
+
+        <!-- Список учеников -->
+        <div class="students-list mb-4">
+            <h3>Список учеников</h3>
+            <ul class="list-group">
+                {% if students %}
+                    {% for s in students %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span>
+                            <span class="badge" style="background-color: {{ s.color }}; color: {% if s.color in ['#3d5526', '#25391a'] %}white{% else %}black{% endif %};">{{ s.name }}</span> - {{ s.subject }} ({{ s.size }})
+                        </span>
+                        <form method="POST" action="{{ url_for('remove_student', name=s.name) }}" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-danger">Удалить</button>
+                        </form>
+                    </li>
+                    {% endfor %}
+                {% else %}
+                    <li class="list-group-item">Пока нет учеников. Добавьте первого на странице "Ученики"!</li>
+                {% endif %}
+            </ul>
+        </div>
+
+        <!-- Календарь -->
+        <div class="schedule-container">
+            <div class="schedule">
+                {% set start_hour = 7 %}
+                {% set end_hour = 23 %}
+                {% set total_hours = end_hour - start_hour + 1 %}
+                {% set container_height = 600 %}
+                {% set pixels_per_minute = container_height / (total_hours * 60) %}
+
+                <div class="times">
+                    {% for hour in range(start_hour, end_hour + 1) %}
+                    <div class="time-label">{{ hour }}:00</div>
+                    {% endfor %}
+                </div>
+
+                <div class="days">
+                    {% for day in weekdays %}
+                    <div class="day-column" data-day="{{ day }}" onclick="openModal('{{ day }}')">
+                        <div class="day-name">
+                            {{ weekdays_ru[day] }}<br>
+                            <small>{{ week_dates[day].formatted }}</small>
+                        </div>
+                        {% for event in schedule[day] %}
+                        {% set start_h, start_m = event.start.split(':') | map('int') %}
+                        {% set end_h, end_m = event.end.split(':') | map('int') %}
+                        {% set top = ((start_h - start_hour) * 60 + start_m) * pixels_per_minute %}
+                        {% set height = ((end_h - start_h) * 60 + (end_m - start_m)) * pixels_per_minute * size_factors[event.size] %}
+                        <div class="event" style="top: {{ top }}px; height: {{ height }}px; background-color: {{ event.color }};" onclick="event.stopPropagation(); openEditModal('{{ day }}', {{ loop.index - 1 }}, '{{ event.student }}', '{{ event.subject }}', '{{ event.start }}', '{{ event.end }}')">
+                            <div class="event-title">{{ event.student }}</div>
+                            <div class="event-time">{{ event.start }} - {{ event.end }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Модальное окно редактирования/удаления события -->
-    <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
+    <!-- Правая панель с задачами -->
+    <div class="right-panel">
+        <div class="tasks-panel">
+            <div class="tasks-header">
+                <h4>Задачи на сегодня</h4>
+                <small>{{ week_dates.Monday.formatted }}</small>
+            </div>
+
+            <!-- Список задач -->
+            <div class="tasks-list">
+                {% if today_tasks %}
+                    {% for task in today_tasks %}
+                    <div class="task-item">
+                        <form method="POST" action="{{ url_for('toggle_task', task_id=task.id) }}" style="display: inline;">
+                            <input type="hidden" name="week_offset" value="{{ week_offset }}">
+                            <input type="checkbox" class="form-check-input" onchange="this.form.submit()" {{ 'checked' if task.completed }}>
+                        </form>
+                        <span class="task-text {{ 'task-completed' if task.completed }}">{{ task.text }}</span>
+                        <form method="POST" action="{{ url_for('delete_task', task_id=task.id) }}" style="display: inline;">
+                            <input type="hidden" name="week_offset" value="{{ week_offset }}">
+                            <button type="submit" class="btn btn-sm btn-danger">×</button>
+                        </form>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-center text-muted">Нет задач на сегодня</p>
+                {% endif %}
+            </div>
+
+            <!-- Форма добавления новой задачи -->
+            <div class="add-task-form">
+                <h5>Добавить задачу</h5>
+                <form method="POST" action="{{ url_for('add_task') }}">
+                    <input type="hidden" name="task_date" value="{{ selected_date }}">
+                    <input type="hidden" name="week_offset" value="{{ week_offset }}">
+                    <div class="mb-3">
+                        <textarea class="form-control" name="task_text" rows="3" placeholder="Введите новую задачу..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100">Добавить задачу</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно добавления события -->
+<div class="modal fade" id="eventModal" tabindex="-1" aria-labelledby="eventModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('add_event') }}">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="editModalLabel">Редактировать урок</h5>
+            <h5 class="modal-title" id="eventModalLabel">Добавить урок</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
           </div>
           <div class="modal-body">
-            <p><strong>Ученик:</strong> <span id="editStudent"></span></p>
-            <p><strong>Предмет:</strong> <span id="editSubject"></span></p>
+            <input type="hidden" name="day" id="modalDay" />
+            <input type="hidden" name="week_offset" value="{{ week_offset }}" />
 
-            <form id="updateForm" method="POST" action="{{ url_for('update_event') }}">
-                <input type="hidden" name="day" id="editDay" />
-                <input type="hidden" name="index" id="editIndex" />
-                <input type="hidden" name="week_offset" value="{{ week_offset }}" />
+            {% if students %}
+            <div class="mb-3">
+                <label for="studentSelect" class="form-label">Выберите ученика</label>
+                <select class="form-select" id="studentSelect" name="student" required>
+                    <option value="">-- Выберите ученика --</option>
+                    {% for s in students %}
+                    <option value="{{ s.name }}">{{ s.name }} - {{ s.subject }} ({{ s.size }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% else %}
+            <div class="alert alert-warning">
+                Нет учеников. Сначала добавьте ученика на странице "Ученики".
+            </div>
+            {% endif %}
 
-                <div class="mb-3">
-                    <label for="editStartTime" class="form-label">Время начала</label>
-                    <input type="time" class="form-control" id="editStartTime" name="start" min="07:00" max="22:59" required>
-                </div>
+            <div class="mb-3">
+                <label for="startTime" class="form-label">Время начала</label>
+                <input type="time" class="form-control" id="startTime" name="start" min="07:00" max="22:59" required>
+            </div>
 
-                <div class="mb-3">
-                    <label for="editEndTime" class="form-label">Время окончания</label>
-                    <input type="time" class="form-control" id="editEndTime" name="end" min="07:01" max="23:00" required>
-                </div>
-            </form>
+            <div class="mb-3">
+                <label for="endTime" class="form-label">Время окончания</label>
+                <input type="time" class="form-control" id="endTime" name="end" min="07:01" max="23:00" required>
+            </div>
 
-            <form id="deleteForm" method="POST" action="{{ url_for('delete_event') }}">
-                <input type="hidden" name="day" id="deleteDay" />
-                <input type="hidden" name="index" id="deleteIndex" />
-                <input type="hidden" name="week_offset" value="{{ week_offset }}" />
-            </form>
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-            <button type="submit" form="updateForm" class="btn btn-save">Сохранить изменения</button>
-            <button type="submit" form="deleteForm" class="btn btn-delete">Удалить урок</button>
+            <button type="submit" class="btn btn-success" {% if not students %}disabled{% endif %}>Добавить</button>
           </div>
         </div>
+    </form>
+  </div>
+</div>
+
+<!-- Модальное окно редактирования/удаления события -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Редактировать урок</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Ученик:</strong> <span id="editStudent"></span></p>
+        <p><strong>Предмет:</strong> <span id="editSubject"></span></p>
+
+        <form id="updateForm" method="POST" action="{{ url_for('update_event') }}">
+            <input type="hidden" name="day" id="editDay" />
+            <input type="hidden" name="index" id="editIndex" />
+            <input type="hidden" name="week_offset" value="{{ week_offset }}" />
+
+            <div class="mb-3">
+                <label for="editStartTime" class="form-label">Время начала</label>
+                <input type="time" class="form-control" id="editStartTime" name="start" min="07:00" max="22:59" required>
+            </div>
+
+            <div class="mb-3">
+                <label for="editEndTime" class="form-label">Время окончания</label>
+                <input type="time" class="form-control" id="editEndTime" name="end" min="07:01" max="23:00" required>
+            </div>
+        </form>
+
+        <form id="deleteForm" method="POST" action="{{ url_for('delete_event') }}">
+            <input type="hidden" name="day" id="deleteDay" />
+            <input type="hidden" name="index" id="deleteIndex" />
+            <input type="hidden" name="week_offset" value="{{ week_offset }}" />
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+        <button type="submit" form="updateForm" class="btn btn-save">Сохранить изменения</button>
+        <button type="submit" form="deleteForm" class="btn btn-delete">Удалить урок</button>
       </div>
     </div>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>

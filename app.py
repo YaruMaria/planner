@@ -18,7 +18,6 @@ palette = {
 # Файлы для хранения данных
 STUDENTS_FILE = 'students.json'
 SCHEDULE_FILE = 'schedule.json'
-TASKS_FILE = 'tasks.json'
 
 # Список учеников: [{"name": "Имя", "subject": "Предмет", "size": "small|medium|large", "color": "#hex"}, ...]
 students = []
@@ -35,19 +34,7 @@ schedule = {
     "Sunday": [],
 }
 
-# Список задач: [{"id": 1, "text": "Текст задачи", "completed": false, "date": "2024-01-01"}, ...]
-tasks = []
-
 weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-weekdays_ru = {
-    "Monday": "Понедельник",
-    "Tuesday": "Вторник",
-    "Wednesday": "Среда",
-    "Thursday": "Четверг",
-    "Friday": "Пятница",
-    "Saturday": "Суббота",
-    "Sunday": "Воскресенье"
-}
 
 # Временной диапазон (с 7:00 до 23:00)
 START_HOUR = 7
@@ -83,18 +70,6 @@ def load_schedule():
             schedule = json.load(f)
 
 
-def save_tasks():
-    with open(TASKS_FILE, 'w') as f:
-        json.dump(tasks, f)
-
-
-def load_tasks():
-    global tasks
-    if os.path.exists(TASKS_FILE):
-        with open(TASKS_FILE, 'r') as f:
-            tasks = json.load(f)
-
-
 # Функция для получения дат недели
 def get_week_dates(week_offset=0):
     """Возвращает даты недели относительно текущей недели"""
@@ -107,23 +82,14 @@ def get_week_dates(week_offset=0):
     week_dates = {}
     for i, day in enumerate(weekdays):
         current_date = start_of_week + timedelta(days=i)
-        week_dates[day] = {
-            "formatted": current_date.strftime("%d.%m.%Y"),
-            "iso": current_date.strftime("%Y-%m-%d")
-        }
+        week_dates[day] = current_date.strftime("%d.%m.%Y")
 
     return week_dates
-
-
-def get_today_tasks(selected_date):
-    """Получаем задачи на выбранную дату"""
-    return [task for task in tasks if task['date'] == selected_date]
 
 
 # Загружаем данные при запуске
 load_students()
 load_schedule()
-load_tasks()
 
 
 @app.route("/load_data", methods=["POST"])
@@ -154,14 +120,9 @@ def index():
     week_offset = int(request.args.get('week', 0))
     week_dates = get_week_dates(week_offset)
 
-    # Получаем задачи на сегодня (первый день выбранной недели)
-    selected_date = week_dates["Monday"]["iso"]  # Можно изменить на текущий день
-    today_tasks = get_today_tasks(selected_date)
-
     return render_template("schedule.html",
                            schedule=schedule,
                            weekdays=weekdays,
-                           weekdays_ru=weekdays_ru,
                            palette=palette,
                            students=students,
                            size_factors=size_factors,
@@ -169,52 +130,7 @@ def index():
                            end_hour=END_HOUR,
                            total_hours=TOTAL_HOURS,
                            week_offset=week_offset,
-                           week_dates=week_dates,
-                           today_tasks=today_tasks,
-                           selected_date=selected_date)
-
-
-@app.route("/add_task", methods=["POST"])
-def add_task():
-    task_text = request.form.get("task_text")
-    task_date = request.form.get("task_date")
-    week_offset = request.form.get("week_offset", 0)
-
-    if task_text and task_date:
-        new_task = {
-            "id": len(tasks) + 1,
-            "text": task_text,
-            "completed": False,
-            "date": task_date
-        }
-        tasks.append(new_task)
-        save_tasks()
-
-    return redirect(url_for("index", week=week_offset))
-
-
-@app.route("/toggle_task/<int:task_id>", methods=["POST"])
-def toggle_task(task_id):
-    week_offset = request.form.get("week_offset", 0)
-
-    for task in tasks:
-        if task["id"] == task_id:
-            task["completed"] = not task["completed"]
-            break
-
-    save_tasks()
-    return redirect(url_for("index", week=week_offset))
-
-
-@app.route("/delete_task/<int:task_id>", methods=["POST"])
-def delete_task(task_id):
-    week_offset = request.form.get("week_offset", 0)
-
-    global tasks
-    tasks = [task for task in tasks if task["id"] != task_id]
-    save_tasks()
-
-    return redirect(url_for("index", week=week_offset))
+                           week_dates=week_dates)
 
 
 @app.route("/students", methods=["GET", "POST"])

@@ -99,9 +99,9 @@
             left: 3px;
             right: 3px;
             border-radius: 6px;
-            padding: 4px; /* Уменьшил padding */
+            padding: 4px;
             box-sizing: border-box;
-            font-size: 0.7rem; /* Уменьшил шрифт */
+            font-size: 0.7rem;
             color: white;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             overflow: hidden;
@@ -109,22 +109,35 @@
             flex-direction: column;
             justify-content: center;
             cursor: pointer;
-            line-height: 1.1; /* Уменьшил межстрочный интервал */
+            line-height: 1.1;
         }
         .event:hover {
             opacity: 0.8;
         }
         .event-title {
             font-weight: 1000;
-            margin-bottom: 3px;
-            line-height: 1.0;
+            margin-bottom: 2px;
+            line-height: 1.1;
+            font-size: 0.75rem;
+        }
+        .event-time {
+            font-size: 0.65rem;
+            opacity: 0.9;
+            line-height: 1.1;
+        }
+        .event-comment {
+            font-size: 0.6rem;
+            opacity: 0.8;
+            font-style: italic;
+            margin-top: 2px;
+            line-height: 1.1;
+            word-break: break-word;
         }
         .btn-save {
             background-color: #5f7f3d;
             color: white;
             border: none;
         }
-
         .btn-save:hover,
         .btn-save:focus {
             background-color: #4b6a30;
@@ -139,10 +152,6 @@
         .btn-delete:focus {
             background-color: #7b9457;
             color: white;
-        }
-        .event-time {
-            font-size: 0.7rem;
-            opacity: 0.9;
         }
         .students-btn {
             position: fixed;
@@ -224,12 +233,9 @@
         .btn-task-delete:hover {
             color: #c82333;
         }
-
-        /* Новый стиль для расположения правой панели */
         .right-panel-content {
-            margin-top: 320px; /* Отступ сверху чтобы панель была ниже */
+            margin-top: 320px;
         }
-
         @media (max-width: 1400px) {
             .main-container {
                 flex-direction: column;
@@ -238,7 +244,7 @@
                 width: 100%;
             }
             .right-panel-content {
-                margin-top: 0; /* На мобильных убираем отступ */
+                margin-top: 0;
             }
         }
         @media (max-width: 1200px) {
@@ -256,15 +262,12 @@
 </head>
 <body>
 
-<!-- Кнопка "Ученики" в правом верхнем углу -->
 <a href="{{ url_for('manage_students') }}" class="btn btn-success students-btn">Ученики</a>
 
 <div class="main-container">
-    <!-- Левая панель с календарем -->
     <div class="left-panel">
         <h1 class="mb-4 text-center">Планнер</h1>
 
-        <!-- Навигация по неделям -->
         <div class="week-navigation">
             <a href="{{ url_for('index', week=week_offset-1) }}" class="btn btn-success">← Предыдущая неделя</a>
             <div class="week-title">
@@ -283,12 +286,10 @@
             <a href="{{ url_for('index', week=week_offset+1) }}" class="btn btn-success">Следующая неделя →</a>
         </div>
 
-        <!-- Кнопка возврата к текущей неделе -->
         <div class="text-center mb-3">
             <a href="{{ url_for('index', week=0) }}" class="btn btn-outline-success">Сегодня</a>
         </div>
 
-        <!-- Календарь -->
         <div class="schedule-container">
             <div class="schedule">
                 {% set start_hour = 7 %}
@@ -312,20 +313,25 @@
                             <small>{{ week_dates[day].formatted }}</small>
                         </div>
                         {% for event in schedule[day] %}
-                        {% set start_h, start_m = event.start.split(':') | map('int') %}
-                        {% set end_h, end_m = event.end.split(':') | map('int') %}
+                            {% if event and event.start and event.end %}
+                            {% set start_h, start_m = event.start.split(':') | map('int') %}
+                            {% set end_h, end_m = event.end.split(':') | map('int') %}
 
-                        {% set start_minutes_from_7 = (start_h - start_hour) * 60 + start_m %}
-                        {% set end_minutes_from_7 = (end_h - start_hour) * 60 + end_m %}
-                        {% set duration_minutes = end_minutes_from_7 - start_minutes_from_7 %}
+                            {% set start_minutes_from_7 = (start_h - start_hour) * 60 + start_m %}
+                            {% set end_minutes_from_7 = (end_h - start_hour) * 60 + end_m %}
+                            {% set duration_minutes = end_minutes_from_7 - start_minutes_from_7 %}
 
-                        {% set top = start_minutes_from_7 * pixels_per_minute + 50 %} <!-- 50px - высота .day-name -->
-                        {% set height = duration_minutes * pixels_per_minute %}
+                            {% set top = start_minutes_from_7 * pixels_per_minute + 50 %}
+                            {% set height = duration_minutes * pixels_per_minute %}
 
-                        <div class="event" style="top: {{ top }}px; height: {{ height }}px; background-color: {{ event.color }};" onclick="event.stopPropagation(); openEditModal('{{ day }}', {{ loop.index - 1 }}, '{{ event.student }}', '{{ event.subject }}', '{{ event.start }}', '{{ event.end }}')">
-                            <div class="event-title">{{ event.student }}</div>
-                            <div class="event-time">{{ event.start }} - {{ event.end }}</div>
-                        </div>
+                            <div class="event" style="top: {{ top }}px; height: {{ height }}px; background-color: {{ event.color }};" onclick="event.stopPropagation(); openEditModal('{{ day }}', {{ loop.index - 1 }}, '{{ event.student }}', '{{ event.subject }}', '{{ event.start }}', '{{ event.end }}', '{{ event.comment|default("", true) }}')">
+                                <div class="event-title">{{ event.student }}</div>
+                                <div class="event-time">{{ event.start }} - {{ event.end }}</div>
+                                {% if event.comment %}
+                                <div class="event-comment">{{ event.comment }}</div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                     {% endfor %}
@@ -334,17 +340,15 @@
         </div>
     </div>
 
-    <!-- Правая панель с задачами на сегодня - ПЕРЕМЕЩЕНА НИЖЕ -->
     <div class="right-panel">
         <div class="right-panel-content">
             <div class="tasks-panel">
                 <div class="tasks-header">
                     <h4>Задачи на сегодня</h4>
-                    <small>{{ current_date }}</small>
+                    <small>{{ date_formatted }}</small>
                 </div>
 
                 <div id="tasks-list">
-                    <!-- Задачи будут добавляться сюда -->
                     <div class="text-muted text-center" id="no-tasks">Нет задач на сегодня</div>
                 </div>
 
@@ -398,6 +402,11 @@
                 <input type="time" class="form-control" id="endTime" name="end" min="07:01" max="23:00" required>
             </div>
 
+            <div class="mb-3">
+                <label for="comment" class="form-label">Комментарий (необязательно)</label>
+                <textarea class="form-control" id="comment" name="comment" rows="2" placeholder="Добавьте заметку к уроку..."></textarea>
+            </div>
+
           </div>
           <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
@@ -434,6 +443,11 @@
                 <label for="editEndTime" class="form-label">Время окончания</label>
                 <input type="time" class="form-control" id="editEndTime" name="end" min="07:01" max="23:00" required>
             </div>
+
+            <div class="mb-3">
+                <label for="editComment" class="form-label">Комментарий</label>
+                <textarea class="form-control" id="editComment" name="comment" rows="2" placeholder="Добавьте заметку к уроку..."></textarea>
+            </div>
         </form>
 
         <form id="deleteForm" method="POST" action="{{ url_for('delete_event') }}">
@@ -462,7 +476,7 @@
         eventModal.show();
     }
 
-    function openEditModal(day, index, student, subject, start, end) {
+    function openEditModal(day, index, student, subject, start, end, comment) {
         document.getElementById('editDay').value = day;
         document.getElementById('editIndex').value = index;
         document.getElementById('deleteDay').value = day;
@@ -471,6 +485,7 @@
         document.getElementById('editSubject').textContent = subject;
         document.getElementById('editStartTime').value = start;
         document.getElementById('editEndTime').value = end;
+        document.getElementById('editComment').value = comment || '';
         editModal.show();
     }
 
@@ -481,18 +496,23 @@
         const addTaskBtn = document.getElementById('add-task-btn');
         const noTasksMessage = document.getElementById('no-tasks');
 
-        // Загрузка задач из localStorage
-        loadTasks();
+        // Получаем текущую дату из сервера
+        const currentDate = '{{ selected_date }}';
 
-        // Добавление новой задачи
-        addTaskBtn.addEventListener('click', addTask);
+        // Загружаем задачи для текущей даты
+        loadTasksForDate(currentDate);
+
+        addTaskBtn.addEventListener('click', function() {
+            addTask(currentDate);
+        });
+
         newTaskInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                addTask();
+                addTask(currentDate);
             }
         });
 
-        function addTask() {
+        function addTask(selectedDate) {
             const taskText = newTaskInput.value.trim();
             if (taskText === '') return;
 
@@ -501,36 +521,42 @@
                 id: taskId,
                 text: taskText,
                 completed: false,
-                date: new Date().toISOString().split('T')[0]
+                date: selectedDate
             };
 
             saveTask(task);
             renderTask(task);
             newTaskInput.value = '';
             newTaskInput.focus();
-
-            // Скрываем сообщение "Нет задач"
             noTasksMessage.style.display = 'none';
         }
 
         function saveTask(task) {
-            const tasks = getTasks();
-            tasks.push(task);
-            localStorage.setItem('tasks', JSON.stringify(tasks));
+            const tasks = getAllTasks();
+            const filteredTasks = tasks.filter(t => t.id !== task.id);
+            filteredTasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(filteredTasks));
         }
 
-        function getTasks() {
-            const today = new Date().toISOString().split('T')[0];
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
-            return tasks.filter(task => task.date === today);
+        function getAllTasks() {
+            return JSON.parse(localStorage.getItem('tasks') || '[]');
         }
 
-        function loadTasks() {
-            const tasks = getTasks();
+        function getTasksForDate(date) {
+            const tasks = getAllTasks();
+            return tasks.filter(task => task.date === date);
+        }
+
+        function loadTasksForDate(date) {
+            const tasks = getTasksForDate(date);
+            tasksList.innerHTML = '';
+
             if (tasks.length === 0) {
                 noTasksMessage.style.display = 'block';
+                tasksList.appendChild(noTasksMessage);
             } else {
                 noTasksMessage.style.display = 'none';
+                tasks.sort((a, b) => a.id - b.id);
                 tasks.forEach(renderTask);
             }
         }
@@ -550,7 +576,6 @@
 
             tasksList.appendChild(taskElement);
 
-            // Обработчики событий
             const checkbox = taskElement.querySelector('.task-checkbox');
             const deleteBtn = taskElement.querySelector('.btn-task-delete');
             const taskText = taskElement.querySelector('.task-text');
@@ -561,16 +586,18 @@
             });
 
             deleteBtn.addEventListener('click', function() {
-                deleteTask(task.id);
+                deleteTask(task.id, currentDate);
                 taskElement.remove();
-                if (tasksList.children.length === 1) { // только сообщение "Нет задач"
+                const remainingTasks = getTasksForDate(currentDate);
+                if (remainingTasks.length === 0) {
                     noTasksMessage.style.display = 'block';
+                    tasksList.appendChild(noTasksMessage);
                 }
             });
         }
 
         function toggleTaskCompleted(taskId, completed) {
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+            const tasks = getAllTasks();
             const task = tasks.find(t => t.id === taskId);
             if (task) {
                 task.completed = completed;
@@ -578,10 +605,17 @@
             }
         }
 
-        function deleteTask(taskId) {
-            const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+        function deleteTask(taskId, currentDate) {
+            const tasks = getAllTasks();
             const filteredTasks = tasks.filter(t => t.id !== taskId);
             localStorage.setItem('tasks', JSON.stringify(filteredTasks));
+
+            const currentTasks = filteredTasks.filter(t => t.date === currentDate);
+            if (currentTasks.length === 0) {
+                noTasksMessage.style.display = 'block';
+                tasksList.innerHTML = '';
+                tasksList.appendChild(noTasksMessage);
+            }
         }
     });
 </script>

@@ -22,25 +22,12 @@ palette = {
 # Файлы для хранения данных
 STUDENTS_FILE = 'students.json'
 SCHEDULE_FILE = 'schedule.json'
-TASKS_FILE = 'tasks.json'
 
 # Список учеников: [{"name": "Имя", "subject": "Предмет", "size": "small|medium|large", "color": "#hex"}, ...]
 students = []
 
-# Расписание в формате: { "Monday": [события], ... }
-# Событие: {student, subject, color, start, end, size}
-schedule = {
-    "Monday": [],
-    "Tuesday": [],
-    "Wednesday": [],
-    "Thursday": [],
-    "Friday": [],
-    "Saturday": [],
-    "Sunday": [],
-}
-
-# Список задач: [{"id": 1, "text": "Текст задачи", "completed": false, "date": "2024-01-01"}, ...]
-tasks = []
+# Расписание теперь хранится по датам: { "2024-01-15": [события], "2024-01-16": [события], ... }
+schedule = {}
 
 weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 weekdays_ru = {
@@ -87,18 +74,6 @@ def load_schedule():
             schedule = json.load(f)
 
 
-def save_tasks():
-    with open(TASKS_FILE, 'w') as f:
-        json.dump(tasks, f)
-
-
-def load_tasks():
-    global tasks
-    if os.path.exists(TASKS_FILE):
-        with open(TASKS_FILE, 'r') as f:
-            tasks = json.load(f)
-
-
 # Функция для получения дат недели
 def get_week_dates(week_offset=0):
     """Возвращает даты недели относительно текущей недели"""
@@ -119,15 +94,19 @@ def get_week_dates(week_offset=0):
     return week_dates
 
 
-def get_today_tasks(selected_date):
-    """Получаем задачи на выбранную дату"""
-    return [task for task in tasks if task['date'] == selected_date]
+# Функция для получения расписания на неделю
+def get_week_schedule(week_dates):
+    """Возвращает расписание для всех дней недели"""
+    week_schedule = {}
+    for day, date_info in week_dates.items():
+        date_iso = date_info["iso"]
+        week_schedule[day] = schedule.get(date_iso, [])
+    return week_schedule
 
 
 # Загружаем данные при запуске
 load_students()
 load_schedule()
-load_tasks()
 
 
 @app.route("/load_data", methods=["POST"])
@@ -138,10 +117,7 @@ def load_data():
 
         # Обновляем данные
         students = data.get('students', [])
-        schedule = data.get('schedule', {
-            "Monday": [], "Tuesday": [], "Wednesday": [],
-            "Thursday": [], "Friday": [], "Saturday": [], "Sunday": []
-        })
+        schedule = data.get('schedule', {})
 
         # Сохраняем после загрузки
         save_students()
@@ -165,10 +141,11 @@ def index():
     current_day_name = weekdays[weekday_index]
     date_formatted = week_dates[current_day_name]["formatted"]
 
-    today_tasks = get_today_tasks(selected_date)
+    # Получаем расписание для текущей недели
+    week_schedule = get_week_schedule(week_dates)
 
     return render_template("schedule.html",
-                           schedule=schedule,
+                           schedule=week_schedule,  # Передаем расписание для недели
                            weekdays=weekdays,
                            weekdays_ru=weekdays_ru,
                            palette=palette,
@@ -179,53 +156,9 @@ def index():
                            total_hours=TOTAL_HOURS,
                            week_offset=week_offset,
                            week_dates=week_dates,
-                           today_tasks=today_tasks,
                            selected_date=selected_date,
                            current_day_iso=selected_date,
                            date_formatted=date_formatted)
-
-
-@app.route("/add_task", methods=["POST"])
-def add_task():
-    task_text = request.form.get("task_text")
-    task_date = request.form.get("task_date")
-    week_offset = request.form.get("week_offset", 0)
-
-    if task_text and task_date:
-        new_task = {
-            "id": len(tasks) + 1,
-            "text": task_text,
-            "completed": False,
-            "date": task_date
-        }
-        tasks.append(new_task)
-        save_tasks()
-
-    return redirect(url_for("index", week=week_offset))
-
-
-@app.route("/toggle_task/<int:task_id>", methods=["POST"])
-def toggle_task(task_id):
-    week_offset = request.form.get("week_offset", 0)
-
-    for task in tasks:
-        if task["id"] == task_id:
-            task["completed"] = not task["completed"]
-            break
-
-    save_tasks()
-    return redirect(url_for("index", week=week_offset))
-
-
-@app.route("/delete_task/<int:task_id>", methods=["POST"])
-def delete_task(task_id):
-    week_offset = request.form.get("week_offset", 0)
-
-    global tasks
-    tasks = [task for task in tasks if task["id"] != task_id]
-    save_tasks()
-
-    return redirect(url_for("index", week=week_offset))
 
 
 @app.route("/students", methods=["GET", "POST"])
@@ -252,11 +185,13 @@ def manage_students():
 def add_event():
     day = request.form.get("day")
     student_name = request.form.get("student")
+    comment = request.form.get("comment", "").strip()
+    week_offset = request.form.get('week_offset', 0)
 
-    if day not in schedule:
-        return "Неверный день", 400
+    # Получаем дату для этого дня недели
+    week_dates = get_week_dates(int(week_offset))
+    date_iso = week_dates[day]["iso"]
 
-    # Находим ученика по имени
     student = next((s for s in students if s["name"] == student_name), None)
     if not student:
         return "Ученик не найден", 400
@@ -264,21 +199,24 @@ def add_event():
     start = request.form.get("start")
     end = request.form.get("end")
 
-    # Добавляем событие с данными из ученика
-    schedule[day].append({
+    # Создаем событие с привязкой к конкретной дате
+    event = {
         "student": student["name"],
         "subject": student["subject"],
         "color": student["color"],
         "start": start,
         "end": end,
         "size": student["size"],
-    })
+        "comment": comment,
+        "date": date_iso  # Добавляем дату для привязки
+    }
 
-    # Сохраняем после изменения
+    # Добавляем в расписание для конкретной даты
+    if date_iso not in schedule:
+        schedule[date_iso] = []
+    schedule[date_iso].append(event)
+
     save_schedule()
-
-    # Получаем текущее смещение недели для возврата на ту же неделю
-    week_offset = request.form.get('week_offset', 0)
     return redirect(url_for("index", week=week_offset))
 
 
@@ -288,19 +226,21 @@ def update_event():
     index = int(request.form.get("index"))
     new_start = request.form.get("start")
     new_end = request.form.get("end")
+    comment = request.form.get("comment", "").strip()
+    week_offset = request.form.get('week_offset', 0)
 
-    if day not in schedule or index < 0 or index >= len(schedule[day]):
+    # Получаем дату для этого дня недели
+    week_dates = get_week_dates(int(week_offset))
+    date_iso = week_dates[day]["iso"]
+
+    if date_iso not in schedule or index < 0 or index >= len(schedule[date_iso]):
         return "Неверные данные", 400
 
-    # Обновляем время урока
-    schedule[day][index]["start"] = new_start
-    schedule[day][index]["end"] = new_end
+    schedule[date_iso][index]["start"] = new_start
+    schedule[date_iso][index]["end"] = new_end
+    schedule[date_iso][index]["comment"] = comment
 
-    # Сохраняем после изменения
     save_schedule()
-
-    # Получаем текущее смещение недели для возврата на ту же неделю
-    week_offset = request.form.get('week_offset', 0)
     return redirect(url_for("index", week=week_offset))
 
 
@@ -308,18 +248,25 @@ def update_event():
 def delete_event():
     day = request.form.get("day")
     index = int(request.form.get("index"))
+    week_offset = request.form.get('week_offset', 0)
 
-    if day not in schedule or index < 0 or index >= len(schedule[day]):
+    # Получаем дату для этого дня недели
+    week_dates = get_week_dates(int(week_offset))
+    date_iso = week_dates[day]["iso"]
+
+    if date_iso not in schedule or index < 0 or index >= len(schedule[date_iso]):
         return "Неверные данные", 400
 
     # Удаляем урок
-    del schedule[day][index]
+    del schedule[date_iso][index]
+
+    # Если для этой даты больше нет событий, удаляем дату из расписания
+    if len(schedule[date_iso]) == 0:
+        del schedule[date_iso]
 
     # Сохраняем после изменения
     save_schedule()
 
-    # Получаем текущее смещение недели для возврата на ту же неделю
-    week_offset = request.form.get('week_offset', 0)
     return redirect(url_for("index", week=week_offset))
 
 
@@ -334,4 +281,3 @@ def remove_student(name):
 
 if __name__ == "__main__":
     app.run(debug=True)
-

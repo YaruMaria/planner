@@ -100,7 +100,10 @@ def get_week_schedule(week_dates):
     week_schedule = {}
     for day, date_info in week_dates.items():
         date_iso = date_info["iso"]
-        week_schedule[day] = schedule.get(date_iso, [])
+        day_schedule = schedule.get(date_iso, [])
+        if not isinstance(day_schedule, list):
+            day_schedule = []
+        week_schedule[day] = day_schedule
     return week_schedule
 
 
@@ -211,9 +214,11 @@ def add_event():
         "date": date_iso  # Добавляем дату для привязки
     }
 
-    # Добавляем в расписание для конкретной даты
-    if date_iso not in schedule:
+    # Убеждаемся, что schedule[date_iso] - список
+    if date_iso not in schedule or not isinstance(schedule[date_iso], list):
         schedule[date_iso] = []
+
+    # Добавляем в расписание для конкретной даты
     schedule[date_iso].append(event)
 
     save_schedule()
@@ -233,7 +238,7 @@ def update_event():
     week_dates = get_week_dates(int(week_offset))
     date_iso = week_dates[day]["iso"]
 
-    if date_iso not in schedule or index < 0 or index >= len(schedule[date_iso]):
+    if date_iso not in schedule or not isinstance(schedule[date_iso], list) or index < 0 or index >= len(schedule[date_iso]):
         return "Неверные данные", 400
 
     schedule[date_iso][index]["start"] = new_start
@@ -254,7 +259,7 @@ def delete_event():
     week_dates = get_week_dates(int(week_offset))
     date_iso = week_dates[day]["iso"]
 
-    if date_iso not in schedule or index < 0 or index >= len(schedule[date_iso]):
+    if date_iso not in schedule or not isinstance(schedule[date_iso], list) or index < 0 or index >= len(schedule[date_iso]):
         return "Неверные данные", 400
 
     # Удаляем урок
@@ -281,3 +286,4 @@ def remove_student(name):
 
 if __name__ == "__main__":
     app.run(debug=True)
+

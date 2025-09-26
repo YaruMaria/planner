@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Planner</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Навигация: кнопки стрелки -->
+        <div class="navigation">
+            <button id="nav-left" class="nav-btn">←</button>
+            <button id="nav-right" class="nav-btn">→</button>
+        </div>
+
+        <!-- Экран 1: Календарь (исходный) -->
+        <div id="calendar-screen" class="screen active">
+            <!-- Вставьте ваш исходный код календаря сюда -->
+            <h2>Календарь</h2>
+            <div class="calendar">
+                <!-- Пример: простая сетка дней -->
+                <div class="day">1</div>
+                <div class="day">2</div>
+                <!-- ... ваш полный календарь -->
+            </div>
+        </div>
+
+        <!-- Экран 2: Трекеры -->
+        <div id="trackers-screen" class="screen">
+            <h2>Трекеры</h2>
+            <div class="trackers-container">
+                <!-- Слева: Трекер чтения книг -->
+                <div class="tracker left">
+                    <h3>Чтение книг</h3>
+                    <div class="month-grid" id="reading-tracker">
+                        <!-- JS сгенерирует кружки для дней -->
+                    </div>
+                </div>
+
+                <!-- Справа: Трекер тренировок -->
+                <div class="tracker right">
+                    <h3>Тренировки</h3>
+                    <div class="month-grid" id="workout-tracker">
+                        <!-- JS сгенерирует кружки для дней -->
+                    </div>
+                </div>
+
+                <!-- Снизу: Трекер водного баланса -->
+                <div class="tracker bottom">
+                    <h3>Водный баланс</h3>
+                    <div class="month-grid" id="water-tracker">
+                        <!-- JS сгенерирует кружки для дней -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+

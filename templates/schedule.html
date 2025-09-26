@@ -122,6 +122,20 @@
             right: 20px;
             z-index: 1000;
         }
+        .week-navigation {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+        .week-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3d5526;
+            min-width: 200px;
+            text-align: center;
+        }
         @media (max-width: 1200px) {
             .schedule {
                 height: 595px; /* 17 * 35 */
@@ -163,6 +177,30 @@
 
     <h1 class="mb-4 text-center">Планнер</h1>
 
+    <!-- Навигация по неделям -->
+    <div class="week-navigation">
+        <a href="{{ url_for('index', week=week_offset-1) }}" class="btn btn-success">← Предыдущая неделя</a>
+        <div class="week-title">
+            {% if week_offset == 0 %}
+                Текущая неделя
+            {% elif week_offset == 1 %}
+                Следующая неделя
+            {% elif week_offset == -1 %}
+                Прошлая неделя
+            {% elif week_offset > 1 %}
+                Через {{ week_offset }} недель
+            {% else %}
+                {{ -week_offset }} недель назад
+            {% endif %}
+        </div>
+        <a href="{{ url_for('index', week=week_offset+1) }}" class="btn btn-success">Следующая неделя →</a>
+    </div>
+
+    <!-- Кнопка возврата к текущей неделе -->
+    <div class="text-center mb-3">
+        <a href="{{ url_for('index', week=0) }}" class="btn btn-outline-success">Сегодня</a>
+    </div>
+
     <!-- Список учеников -->
     <div class="students-list mb-4">
         <h3>Список учеников</h3>
@@ -200,7 +238,10 @@
         <div class="days">
             {% for day in weekdays %}
             <div class="day-column" data-day="{{ day }}" onclick="openModal('{{ day }}')">
-                <div class="day-name">{{ day[:3] }}</div>
+                <div class="day-name">
+                    {{ day[:3] }}<br>
+                    <small>{{ week_dates[day] }}</small>
+                </div>
                 {% for event in schedule[day] %}
                 {% set start_h, start_m = event.start.split(':') | map('int') %}
                 {% set end_h, end_m = event.end.split(':') | map('int') %}
@@ -227,6 +268,7 @@
               </div>
               <div class="modal-body">
                 <input type="hidden" name="day" id="modalDay" />
+                <input type="hidden" name="week_offset" value="{{ week_offset }}" />
 
                 {% if students %}
                 <div class="mb-3">
@@ -279,6 +321,7 @@
             <form id="updateForm" method="POST" action="{{ url_for('update_event') }}">
                 <input type="hidden" name="day" id="editDay" />
                 <input type="hidden" name="index" id="editIndex" />
+                <input type="hidden" name="week_offset" value="{{ week_offset }}" />
 
                 <div class="mb-3">
                     <label for="editStartTime" class="form-label">Время начала</label>
@@ -294,6 +337,7 @@
             <form id="deleteForm" method="POST" action="{{ url_for('delete_event') }}">
                 <input type="hidden" name="day" id="deleteDay" />
                 <input type="hidden" name="index" id="deleteIndex" />
+                <input type="hidden" name="week_offset" value="{{ week_offset }}" />
             </form>
           </div>
           <div class="modal-footer">
@@ -331,4 +375,3 @@
 
 </body>
 </html>
-

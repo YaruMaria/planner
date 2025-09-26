@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 import os
 
@@ -44,10 +44,12 @@ TOTAL_HOURS = END_HOUR - START_HOUR
 # Коэффициенты размера для высоты событий
 size_factors = {"small": 1.3, "medium": 1.6, "large": 1.9}
 
+
 # Функции для сохранения и загрузки
 def save_students():
     with open(STUDENTS_FILE, 'w') as f:
         json.dump(students, f)
+
 
 def load_students():
     global students
@@ -55,9 +57,11 @@ def load_students():
         with open(STUDENTS_FILE, 'r') as f:
             students = json.load(f)
 
+
 def save_schedule():
     with open(SCHEDULE_FILE, 'w') as f:
         json.dump(schedule, f)
+
 
 def load_schedule():
     global schedule
@@ -65,9 +69,28 @@ def load_schedule():
         with open(SCHEDULE_FILE, 'r') as f:
             schedule = json.load(f)
 
+
+# Функция для получения дат недели
+def get_week_dates(week_offset=0):
+    """Возвращает даты недели относительно текущей недели"""
+    today = datetime.now().date()
+    # Находим понедельник текущей недели
+    start_of_week = today - timedelta(days=today.weekday())
+    # Добавляем смещение недели
+    start_of_week += timedelta(weeks=week_offset)
+
+    week_dates = {}
+    for i, day in enumerate(weekdays):
+        current_date = start_of_week + timedelta(days=i)
+        week_dates[day] = current_date.strftime("%d.%m.%Y")
+
+    return week_dates
+
+
 # Загружаем данные при запуске
 load_students()
 load_schedule()
+
 
 @app.route("/load_data", methods=["POST"])
 def load_data():
@@ -90,17 +113,25 @@ def load_data():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
+
 @app.route("/")
 def index():
+    # Получаем номер недели из параметра (по умолчанию 0 - текущая неделя)
+    week_offset = int(request.args.get('week', 0))
+    week_dates = get_week_dates(week_offset)
+
     return render_template("schedule.html",
-                         schedule=schedule,
-                         weekdays=weekdays,
-                         palette=palette,
-                         students=students,
-                         size_factors=size_factors,
-                         start_hour=START_HOUR,
-                         end_hour=END_HOUR,
-                         total_hours=TOTAL_HOURS)
+                           schedule=schedule,
+                           weekdays=weekdays,
+                           palette=palette,
+                           students=students,
+                           size_factors=size_factors,
+                           start_hour=START_HOUR,
+                           end_hour=END_HOUR,
+                           total_hours=TOTAL_HOURS,
+                           week_offset=week_offset,
+                           week_dates=week_dates)
+
 
 @app.route("/students", methods=["GET", "POST"])
 def manage_students():
@@ -120,6 +151,7 @@ def manage_students():
             save_students()
         return redirect(url_for("manage_students"))
     return render_template("students.html", students=students, palette=palette)
+
 
 @app.route("/add_event", methods=["POST"])
 def add_event():
@@ -150,7 +182,10 @@ def add_event():
     # Сохраняем после изменения
     save_schedule()
 
-    return redirect(url_for("index"))
+    # Получаем текущее смещение недели для возврата на ту же неделю
+    week_offset = request.form.get('week_offset', 0)
+    return redirect(url_for("index", week=week_offset))
+
 
 @app.route("/update_event", methods=["POST"])
 def update_event():
@@ -169,7 +204,10 @@ def update_event():
     # Сохраняем после изменения
     save_schedule()
 
-    return redirect(url_for("index"))
+    # Получаем текущее смещение недели для возврата на ту же неделю
+    week_offset = request.form.get('week_offset', 0)
+    return redirect(url_for("index", week=week_offset))
+
 
 @app.route("/delete_event", methods=["POST"])
 def delete_event():
@@ -185,7 +223,10 @@ def delete_event():
     # Сохраняем после изменения
     save_schedule()
 
-    return redirect(url_for("index"))
+    # Получаем текущее смещение недели для возврата на ту же неделю
+    week_offset = request.form.get('week_offset', 0)
+    return redirect(url_for("index", week=week_offset))
+
 
 @app.route("/remove_student/<name>", methods=["POST"])
 def remove_student(name):
@@ -194,6 +235,7 @@ def remove_student(name):
     # Сохраняем после изменения
     save_students()
     return redirect(url_for("manage_students"))
+
 
 if __name__ == "__main__":
     app.run(debug=True)

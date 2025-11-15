@@ -7,6 +7,7 @@ app = Flask(__name__)
 
 # Палитра оттенков зелёного
 palette = {
+    # Существующие оттенки (оставлены без изменений)
     "Green Tea Cream": "#e0e8d3",
     "Pale Celadon": "#d2dec0",
     "Seafoam Green": "#b8d0a3",
@@ -17,6 +18,29 @@ palette = {
     "Roasted Green": "#5f7f3d",
     "Dark Tea Leaf": "#3d5526",
     "Forest Shadow": "#25391a",
+
+    # ЗАМЕНЕНЫ СВЕТЛЫЕ ОТТЕНКИ НА БОЛЕЕ ГЛУБОКИЕ
+    "Misty Moss": "#c4ccb0",
+    "Dried Sage": "#b2bd9d",
+    "Olive Haze": "#9da989",
+    "Forest Mist": "#8a9776",
+
+    # НОВЫЕ СРЕДНИЕ ОТТЕНКИ
+    "Sage Brush": "#8a9776",
+    "Dried Herb": "#768266",
+    "Avocado Stone": "#657353",
+    "Military Olive": "#566442",
+
+    # НОВЫЕ ТЕМНЫЕ ОТТЕНКИ
+    "Hunter's Green": "#2f4020",
+    "Pine Needle": "#1a2e15",
+    "Deep Fir": "#0f1f0a",
+
+    # НОВЫЕ АКЦЕНТНЫЕ ОТТЕНКИ
+    "Young Bamboo": "#c2cfaa",
+    "Green Tea Leaf": "#a8b892",
+    "Forest Canopy": "#4a5c34",
+    "Swamp Moss": "#556b2f"
 }
 
 # Файлы для хранения данных
@@ -286,4 +310,3 @@ def remove_student(name):
 
 if __name__ == "__main__":
     app.run(debug=True)
-
